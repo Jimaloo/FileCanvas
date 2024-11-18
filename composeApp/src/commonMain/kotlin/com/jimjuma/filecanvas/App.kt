@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
@@ -63,17 +64,14 @@ fun App() {
         }
     }
 }
+
 @Composable
 fun TopSection() {
     Column {
         // Project Name Bar
         Row(
-            Modifier
-                .fillMaxWidth()
-                .height(48.dp)
-                .background(Color.White)
-                .border(1.dp, Color.LightGray),
-            verticalAlignment = Alignment.CenterVertically
+            Modifier.fillMaxWidth().height(48.dp).background(Color.White)
+                .border(1.dp, Color.LightGray), verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 "Test project",
@@ -84,10 +82,7 @@ fun TopSection() {
 
         // Toolbar
         Row(
-            Modifier
-                .fillMaxWidth()
-                .height(40.dp)
-                .background(Color.White)
+            Modifier.fillMaxWidth().height(40.dp).background(Color.White)
                 .border(1.dp, Color.LightGray),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -96,8 +91,7 @@ fun TopSection() {
 
             // Style dropdown
             OutlinedButton(
-                onClick = { /* TODO */ },
-                modifier = Modifier.height(32.dp)
+                onClick = { /* TODO */ }, modifier = Modifier.height(32.dp)
             ) {
                 Text("Style")
                 Icon(Icons.Default.ArrowDropDown, contentDescription = null)
@@ -134,15 +128,10 @@ fun TopSection() {
 @Composable
 fun LeftSidebar() {
     Box(
-        Modifier
-            .width(48.dp)
-            .fillMaxHeight()
-            .background(Color.White)
-            .border(1.dp, Color.LightGray)
+        Modifier.width(48.dp).fillMaxHeight().background(Color.White).border(1.dp, Color.LightGray)
     ) {
         Column(
-            Modifier.padding(vertical = 8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            Modifier.padding(vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally
         ) {
             IconButton(onClick = { /* TODO */ }) {
                 Icon(Icons.Default.Menu, "Menu")
@@ -157,15 +146,10 @@ fun LeftSidebar() {
 @Composable
 fun RightSidebar() {
     Box(
-        Modifier
-            .width(48.dp)
-            .fillMaxHeight()
-            .background(Color.White)
-            .border(1.dp, Color.LightGray)
+        Modifier.width(48.dp).fillMaxHeight().background(Color.White).border(1.dp, Color.LightGray)
     ) {
         Column(
-            Modifier.padding(vertical = 8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            Modifier.padding(vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally
         ) {
             IconButton(onClick = { /* TODO */ }) {
                 Icon(Icons.Default.Notifications, "Notifications")
@@ -180,8 +164,9 @@ fun RightSidebar() {
 @Composable
 fun GridBackground() {
     Canvas(Modifier.fillMaxSize()) {
-        drawGrid(gridSize = 40.dp,
-            gridColor = Color.LightGray.copy(alpha = 0.5f))
+        drawGrid(
+            gridSize = 40.dp, gridColor = Color.LightGray.copy(alpha = 0.5f)
+        )
     }
 }
 
@@ -193,28 +178,20 @@ fun DrawScope.drawGrid(gridSize: Dp, gridColor: Color) {
     for (i in 0..horizontalLines) {
         val y = i * gridPixel
         drawLine(
-            color = gridColor,
-            start = Offset(0f, y),
-            end = Offset(size.width, y),
-            strokeWidth = 1f
+            color = gridColor, start = Offset(0f, y), end = Offset(size.width, y), strokeWidth = 1f
         )
     }
 
     for (i in 0..verticalLines) {
         val x = i * gridPixel
         drawLine(
-            color = gridColor,
-            start = Offset(x, 0f),
-            end = Offset(x, size.height),
-            strokeWidth = 1f
+            color = gridColor, start = Offset(x, 0f), end = Offset(x, size.height), strokeWidth = 1f
         )
     }
 }
 
 data class TileState(
-    val name: String,
-    val offset: Offset,
-    val size: Size
+    val name: String, val offset: Offset, val size: Size
 )
 
 @Composable
@@ -223,14 +200,9 @@ fun TileContainer() {
         mutableStateOf(
             listOf(
                 TileState(
-                    name = "File 1",
-                    offset = Offset(100f, 100f),
-                    size = Size(100f, 100f)
-                ),
-                TileState(
-                    name = "File 2",
-                    offset = Offset(300f, 200f),
-                    size = Size(150f, 150f)
+                    name = "File 1", offset = Offset(100f, 100f), size = Size(100f, 100f)
+                ), TileState(
+                    name = "File 2", offset = Offset(300f, 200f), size = Size(150f, 150f)
                 )
             )
         )
@@ -238,18 +210,7 @@ fun TileContainer() {
 
     Box(Modifier.fillMaxSize()) {
         tiles.forEachIndexed { index, tile ->
-//            DraggableResizableTile(
-//                tileState = tile,
-//                onMove = { dragAmount ->
-//                    tiles = tiles.toMutableList().apply {
-//                        this[index] = this[index].copy(
-//                            offset = this[index].offset + dragAmount
-//                        )
-//                    }
-//                }
-//            )
-            DraggableResizableTile(
-                tileState = tile,
+            DraggableResizableTile(tileState = tile,
                 onMove = { dragAmount ->
                     tiles = tiles.toMutableList().apply {
                         this[index] = this[index].copy(
@@ -263,36 +224,9 @@ fun TileContainer() {
                             size = newSize
                         )
                     }
-                }
-            )
+                })
         }
     }
 }
 
-@Composable
-fun DraggableResizableTile1(
-    tileState: TileState,
-    onMove: (Offset) -> Unit
-) {
-    Box(
-        modifier = Modifier
-            .offset {
-                IntOffset(
-                    tileState.offset.x.roundToInt(),
-                    tileState.offset.y.roundToInt()
-                )
-            }
-            .size(tileState.size.width.dp,
-                tileState.size.height.dp)
-            .background(Color.Cyan, RoundedCornerShape(4.dp))
-            .pointerInput(Unit) {
-                detectDragGestures { change, dragAmount ->
-                    change.consume()
-                    onMove(dragAmount)
-                }
-            },
-        contentAlignment = Alignment.Center
-    ) {
-        Text(tileState.name, color = Color.Black)
-    }
-}
+
