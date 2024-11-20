@@ -189,13 +189,16 @@ fun DraggableResizableTile(
             tileState.offset.y.roundToInt()
         )
     }.size(tileState.size.width.dp, tileState.size.height.dp)
-        .background(MaterialTheme.colors.surface, RoundedCornerShape(8.dp)).border(
-            width = if (isSelected.value) 2.dp else 1.dp,
-            color = if (isSelected.value) MaterialTheme.colors.primary else Color.LightGray,
+        .background(MaterialTheme.colors.surface, RoundedCornerShape(10.dp)).border(
+            width = if (isSelected.value) 1.dp else 1.dp,
+            color = if (isSelected.value)
+                MaterialTheme.colors.primary
+            else
+                Color.LightGray,
             shape = RoundedCornerShape(8.dp)
         ).shadow(
             elevation = if (isSelected.value) 4.dp else 1.dp,
-            shape = RoundedCornerShape(8.dp)
+            shape = RoundedCornerShape(10.dp)
         )
         .pointerInput(Unit) {
             detectDragGestures(onDragStart = { isSelected.value = true },
@@ -227,7 +230,9 @@ fun DraggableResizableTile(
                     Modifier.align(
                         alignment
                     ), handleSize, handle, resizeState, cursor
-                ) { dragAmount -> handleResize(tileState, handle, dragAmount, onMove, onResize) }
+                ) { dragAmount ->
+                    handleResize(tileState, handle, dragAmount, onMove, onResize)
+                }
             }
         }
     }
@@ -243,8 +248,11 @@ fun ResizeHandle(
     onResize: (Offset) -> Unit
 ) {
     Box(
-        modifier = modifier.size(size).background(MaterialTheme.colors.surface, CircleShape)
-            .border(1.dp, MaterialTheme.colors.primary, CircleShape).pointerInput(handle) {
+        modifier = modifier
+            .size(size)
+            .background(MaterialTheme.colors.surface, CircleShape)
+            .border(1.dp, MaterialTheme.colors.primary, CircleShape)
+            .pointerInput(handle) {
                 detectDragGestures(onDragStart = { resizeState.value = handle },
                     onDragEnd = { resizeState.value = ResizeHandle.None },
                     onDragCancel = {
@@ -270,7 +278,7 @@ fun handleResize(
                 tileState.size.height - dragAmount.y
             if (newWidth >= 50f && newHeight >= 50f) {
                 onMove(dragAmount)
-                onResize (Size(newWidth, newHeight))
+                onResize(Size(newWidth, newHeight))
             }
         }
 

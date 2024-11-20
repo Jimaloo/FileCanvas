@@ -4,6 +4,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,126 +20,166 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
+import androidx.compose.material.Button
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
+import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.OutlinedButton
+import androidx.compose.material.Surface
 import androidx.compose.material.Text
+import androidx.compose.material.TextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.Home
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.scale
+import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.jimjuma.filecanvas.tile.DraggableResizableTile
 import kotlin.math.roundToInt
 
 @Composable
 fun App() {
+    var sidebarVisible by remember { mutableStateOf(true) }
     MaterialTheme {
         Column(Modifier.fillMaxSize()) {
             // Top Section
             TopSection()
 
             // Main Content
-            Row(Modifier.fillMaxSize()) {
+            Box(Modifier.fillMaxSize()) {
                 // Left Sidebar
-                LeftSidebar()
+//                Box(Modifier.fillMaxHeight()) {
+//                    GridBackground()
+                DotGrid()
+                TileContainer()
+//                }
 
-                // Main Canvas Area
-                Box(Modifier.weight(1f).fillMaxHeight()) {
-                    GridBackground()
-                    TileContainer()
+                if (sidebarVisible) {
+                    FloatingSidebar { sidebarVisible = false }
+                } else {
+
+                    IconButton(
+                        onClick = { sidebarVisible = true },
+                        modifier = Modifier.padding(16.dp)
+                            .align(Alignment.TopStart)
+                            .background(
+                                Color(0xFF6200EA),
+                                RoundedCornerShape(50)
+                            )
+                    ) {
+                        Icon(
+                            Icons.Outlined.Home,
+                            contentDescription = "Open Sidebar",
+                            tint = Color.White
+                        )
+                    }
+                    RightSidebar()
                 }
-
-                // Right Sidebar
-                RightSidebar()
             }
+        }
+    }
+}
+
+@Composable
+fun FloatingSidebar(onClose: () -> Unit) {
+    Surface(
+        modifier = Modifier.width(250.dp).fillMaxHeight().padding(16.dp).background(Color.White)
+            .shadow(8.dp, RoundedCornerShape(16.dp)),
+        shape = RoundedCornerShape(16.dp),
+        elevation = 8.dp
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    "Sidebar",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                IconButton(onClick = onClose) {
+                    Icon(
+                        Icons.Default.Close,
+                        contentDescription = "Close Sidebar"
+                    )
+                }
+            }
+
         }
     }
 }
 
 @Composable
 fun TopSection() {
-    Column {
-        // Project Name Bar
-        Row(
-            Modifier.fillMaxWidth().height(48.dp).background(Color.White)
-                .border(1.dp, Color.LightGray), verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                "Test project",
-                modifier = Modifier.padding(horizontal = 16.dp),
-                style = MaterialTheme.typography.h6
-            )
-        }
+    Row(
+        modifier = Modifier.fillMaxWidth().background(Color(0xFFE0E0E0)).padding(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text("Home")
 
-        // Toolbar
-        Row(
-            Modifier.fillMaxWidth().height(40.dp).background(Color.White)
-                .border(1.dp, Color.LightGray),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Spacer(Modifier.width(8.dp))
-
-            // Style dropdown
-            OutlinedButton(
-                onClick = { /* TODO */ }, modifier = Modifier.height(32.dp)
-            ) {
-                Text("Style")
-                Icon(Icons.Default.ArrowDropDown, contentDescription = null)
-            }
-
-            // Main actions
-            IconButton(onClick = { /* TODO */ }) {
-                Icon(Icons.Default.Email, "Page")
-            }
-            IconButton(onClick = { /* TODO */ }) {
-                Icon(Icons.Default.Email, "Board")
-            }
-            IconButton(onClick = { /* TODO */ }) {
-                Icon(Icons.Default.Email, "File")
-            }
-
-            // Secondary actions
-            IconButton(onClick = { /* TODO */ }) {
-                Icon(Icons.Default.Email, "Link")
-            }
-            IconButton(onClick = { /* TODO */ }) {
-                Icon(Icons.Default.Add, "Add")
-            }
-            IconButton(onClick = { /* TODO */ }) {
-                Icon(Icons.Default.Email, "Remove")
-            }
-            IconButton(onClick = { /* TODO */ }) {
-                Icon(Icons.Default.Email, "Help")
-            }
-        }
     }
 }
 
 @Composable
-fun LeftSidebar() {
+fun DotGrid(
+    cellSize: Dp = 40.dp,
+    rowCount: Int = 1000,
+    columnCount: Int = 1000,
+    dotRadius: Dp = 2.dp,
+    dotColor: Color = Color.LightGray
+) {
+    var scale by remember { mutableStateOf(1f) }
+    var offsetX by remember { mutableStateOf(0f) }
+    var offsetY by remember { mutableStateOf(0f) }
     Box(
-        Modifier.width(48.dp).fillMaxHeight().background(Color.White).border(1.dp, Color.LightGray)
+        modifier = Modifier.fillMaxSize()
+            .pointerInput(Unit) {
+                detectTransformGestures { _, pan, zoom, _ ->
+                    scale *= zoom
+                    offsetX += pan.x
+                    offsetY += pan.y
+                }
+            }
     ) {
-        Column(
-            Modifier.padding(vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            IconButton(onClick = { /* TODO */ }) {
-                Icon(Icons.Default.Menu, "Menu")
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            with(drawContext.canvas.nativeCanvas) {
+
+            val cellSizePx = cellSize.toPx() /2
+            val dotRadiusPx = dotRadius.toPx()/2
+            scale(scale) {
+                translate(offsetX, offsetY) {
+                    // Iterate through rows and columns to calculate dot positions
+                    for (row in 0 until rowCount) {
+                        for (col in 0 until columnCount) {
+                            val x = col * cellSizePx
+                            val y = row * cellSizePx
+
+                            // Draw a circle (dot) at the intersection point
+                            drawCircle(
+                                color = dotColor,
+                                radius = dotRadiusPx,
+                                center = Offset(x, y)
+                            )
+                        }
+                    }
+                }}
             }
-            IconButton(onClick = { /* TODO */ }) {
-                Icon(Icons.Default.Refresh, "Refresh")
-            }
+
+
         }
     }
 }
@@ -146,10 +187,12 @@ fun LeftSidebar() {
 @Composable
 fun RightSidebar() {
     Box(
-        Modifier.width(48.dp).fillMaxHeight().background(Color.White).border(1.dp, Color.LightGray)
+        Modifier.width(48.dp).fillMaxHeight().background(Color.White)
+            .border(1.dp, Color.LightGray)
     ) {
         Column(
-            Modifier.padding(vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally
+            Modifier.padding(vertical = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             IconButton(onClick = { /* TODO */ }) {
                 Icon(Icons.Default.Notifications, "Notifications")
@@ -161,12 +204,19 @@ fun RightSidebar() {
     }
 }
 
+
 @Composable
 fun GridBackground() {
-    Canvas(Modifier.fillMaxSize()) {
-        drawGrid(
-            gridSize = 40.dp, gridColor = Color.LightGray.copy(alpha = 0.5f)
-        )
+    Box {
+        Canvas(Modifier.fillMaxSize()) {
+
+            drawGrid(
+                gridSize = 40.dp,
+                gridColor = Color.LightGray.copy(alpha = 0.5f)
+            )
+        }
+
+
     }
 }
 
@@ -178,14 +228,20 @@ fun DrawScope.drawGrid(gridSize: Dp, gridColor: Color) {
     for (i in 0..horizontalLines) {
         val y = i * gridPixel
         drawLine(
-            color = gridColor, start = Offset(0f, y), end = Offset(size.width, y), strokeWidth = 1f
+            color = gridColor,
+            start = Offset(0f, y),
+            end = Offset(size.width, y),
+            strokeWidth = 1f
         )
     }
 
     for (i in 0..verticalLines) {
         val x = i * gridPixel
         drawLine(
-            color = gridColor, start = Offset(x, 0f), end = Offset(x, size.height), strokeWidth = 1f
+            color = gridColor,
+            start = Offset(x, 0f),
+            end = Offset(x, size.height),
+            strokeWidth = 1f
         )
     }
 }
@@ -210,21 +266,19 @@ fun TileContainer() {
 
     Box(Modifier.fillMaxSize()) {
         tiles.forEachIndexed { index, tile ->
-            DraggableResizableTile(tileState = tile,
-                onMove = { dragAmount ->
-                    tiles = tiles.toMutableList().apply {
-                        this[index] = this[index].copy(
-                            offset = this[index].offset + dragAmount
-                        )
-                    }
-                },
-                onResize = { newSize ->
-                    tiles = tiles.toMutableList().apply {
-                        this[index] = this[index].copy(
-                            size = newSize
-                        )
-                    }
-                })
+            DraggableResizableTile(tileState = tile, onMove = { dragAmount ->
+                tiles = tiles.toMutableList().apply {
+                    this[index] = this[index].copy(
+                        offset = this[index].offset + dragAmount
+                    )
+                }
+            }, onResize = { newSize ->
+                tiles = tiles.toMutableList().apply {
+                    this[index] = this[index].copy(
+                        size = newSize
+                    )
+                }
+            })
         }
     }
 }
