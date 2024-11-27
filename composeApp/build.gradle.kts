@@ -53,7 +53,12 @@ kotlin {
     }
 
     sourceSets {
-        val desktopMain by getting
+        val desktopMain by getting{
+            dependencies {
+                implementation("org.apache.pdfbox:pdfbox:2.0.24")
+            }
+        }
+
 
         androidMain.dependencies {
             implementation(compose.preview)
