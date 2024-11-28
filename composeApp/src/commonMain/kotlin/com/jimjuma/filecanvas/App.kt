@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Divider
@@ -26,12 +27,16 @@ import androidx.compose.material.icons.outlined.Home
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.jimjuma.filecanvas.extensions.CommonFile
@@ -39,6 +44,15 @@ import com.jimjuma.filecanvas.extensions.chooseFile
 import com.jimjuma.filecanvas.extensions.loadImage
 import com.jimjuma.filecanvas.extensions.renderPdfPages
 import com.jimjuma.filecanvas.tile.DraggableResizableTile
+import filecanvas.composeapp.generated.resources.Res
+import filecanvas.composeapp.generated.resources.add__alt
+import filecanvas.composeapp.generated.resources.document
+import filecanvas.composeapp.generated.resources.document__add
+import filecanvas.composeapp.generated.resources.ibm_cloud__vpc_file_storage
+import filecanvas.composeapp.generated.resources.idea
+import filecanvas.composeapp.generated.resources.subtract__alt
+import filecanvas.composeapp.generated.resources.trash
+import org.jetbrains.compose.resources.painterResource
 import kotlin.math.roundToInt
 
 @Composable
@@ -46,133 +60,189 @@ fun App() {
     var sidebarVisible by remember { mutableStateOf(true) }
     var selectedFile by remember { mutableStateOf<CommonFile?>(null) }
     var pdfText by remember { mutableStateOf("") }
+    var scale by remember { mutableStateOf(1f) }
     var tiles by remember {
         mutableStateOf(
             mutableListOf<TileState>(
-//                TileState(
-//                    name = "File 1",
-//                    offset = Offset(100f, 100f),
-//                    size = Size(100f, 100f),
-//                ), TileState(
-//                    name = "File 2",
-//                    offset = Offset(300f, 200f),
-//                    size = Size(150f, 150f),
-//                )
             )
         )
     }
 
     MaterialTheme {
         Box(Modifier.fillMaxSize()) {
-            DotGrid()
+            DotGrid(scale)
             Column(Modifier.fillMaxSize()) {
                 // Top Section
                 Row(
                     modifier = Modifier.fillMaxWidth()
-                        .background(Color.White)
+                        .background(Color(0xFFF5F7F8))
                         .padding(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text("Home")
                 }
 
-                Divider(modifier = Modifier.height(.5.dp))
+                Divider(modifier = Modifier.height(.3.dp))
 
                 Row(
                     modifier = Modifier
-                        .background(Color.White)
+                        .background(Color(0xFFF5F7F8))
                         .fillMaxWidth()
                         .padding(5.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                    verticalAlignment = Alignment.CenterVertically,
 
-                    Text("Pick PDF File", modifier = Modifier.clickable {
-                        val file = chooseFile()
-                        if (file != null) {
-                            when {
-                                file.extension().equals("pdf", ignoreCase = true) -> {
-                                    selectedFile = file
-                                    tiles = tiles.toMutableList().apply {
-                                        val pdfPages = renderPdfPages(file) // Platform-specific rendering
-//                                        pdfPages.forEachIndexed { index, page ->
+                    ) {
+
+
+                    Row(
+                        modifier = Modifier.padding(horizontal = 6.dp).clickable {
+
+                            val file = chooseFile()
+                            if (file != null) {
+                                when {
+                                    file.extension().equals("pdf", ignoreCase = true) -> {
+                                        selectedFile = file
+                                        tiles = tiles.toMutableList().apply {
+                                            val pdfPages = renderPdfPages(file)
                                             add(
                                                 TileState(
                                                     name = selectedFile?.name ?: "",
-                                                    offset = Offset(300f, 700f), // Offset each page slightly
+                                                    offset = Offset(
+                                                        300f,
+                                                        700f
+                                                    ), // Offset each page slightly
                                                     size = Size(300f, 400f),
                                                     imageBitmaps = pdfPages
                                                 )
                                             )
-//                                        }
-                                    }
-                                }
-                                file.extension().lowercase() in listOf("jpg", "jpeg", "png", "bmp", "gif") -> {
-                                    selectedFile = file
 
-                                    tiles = tiles.toMutableList().apply {
-                                        val imageBitmap =
-                                            loadImage(file) // Platform-specific image loader
-                                        add(
-                                            TileState(
-                                                name = file.name,
-                                                offset = Offset(300f, 700f),
-                                                size = Size(300f, 400f),
-                                                imageBitmap = imageBitmap,
-                                            )
-                                        )
+                                        }
                                     }
-                                }
-                                else -> {
-                                    pdfText = "Please select a valid PDF or image file."
+
+                                    file.extension().lowercase() in listOf(
+                                        "jpg",
+                                        "jpeg",
+                                        "png",
+                                        "bmp",
+                                        "gif"
+                                    ) -> {
+                                        selectedFile = file
+
+                                        tiles = tiles.toMutableList().apply {
+                                            val imageBitmap =
+                                                loadImage(file) // Platform-specific image loader
+                                            add(
+                                                TileState(
+                                                    name = file.name,
+                                                    offset = Offset(300f, 700f),
+                                                    size = Size(300f, 400f),
+                                                    imageBitmap = imageBitmap,
+                                                )
+                                            )
+                                        }
+                                    }
+
+                                    else -> {
+                                        pdfText = "Please select a valid PDF or image file."
+                                    }
                                 }
                             }
-                        }
-                    })
-                    Text(" | ")
-                    Text(" Center zoom ")
-                    Text(" | ")
-                    Text(" Zoom in ")
-                    Text(" | ")
-                    Text(" Zoom out ")
+
+                        },
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            modifier = Modifier.size(32.dp).padding(horizontal = 6.dp),
+                            painter =
+                            painterResource(Res.drawable.document__add),
+                            contentDescription = ""
+                        )
+                        Text("Select file")
+                    }
+
+
+
+                    Row(
+                        modifier = Modifier.padding(horizontal = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            modifier = Modifier.size(32.dp).padding(horizontal = 6.dp),
+                            painter = painterResource(Res.drawable.add__alt),
+                            contentDescription = ""
+                        )
+                        Text(" Center zoom ")
+                    }
+
+
+
+                    Row(
+                        modifier = Modifier.padding(horizontal = 6.dp).clickable{
+                            scale += .1f
+                        },
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            modifier = Modifier.size(32.dp).padding(horizontal = 6.dp),
+                            painter = painterResource(Res.drawable.add__alt),
+                            contentDescription = ""
+                        )
+                        Text(" Zoom in")
+                    }
+
+
+
+                    Row(
+                        modifier = Modifier.padding(horizontal = 6.dp).clickable{
+                            scale -= .1f
+                        },
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            modifier = Modifier.size(32.dp).padding(horizontal = 6.dp),
+                            painter = painterResource(Res.drawable.subtract__alt),
+                            contentDescription = ""
+                        )
+                        Text(" Zoom out ")
+                    }
+
                 }
 
-                Divider(modifier = Modifier.height(.5.dp))
+                Divider(modifier = Modifier.height(.3.dp))
 
                 Row(modifier = Modifier.fillMaxWidth().weight(1f)) {
 
                     Column(
-                        modifier = Modifier.width(48.dp).background(Color.White).fillMaxHeight()
+                        modifier = Modifier.width(48.dp)
+                            .background(Color(0xFFF5F7F8))
+                            .fillMaxHeight()
                     ) {
-                        IconButton(onClick = { /* TODO */ }) {
-                            Icon(Icons.Default.Settings, "Settings")
-                        }
-
-                        IconButton(onClick = { /* TODO */ }) {
-                            Icon(Icons.Default.Settings, "Settings")
-                        }
-                    }
-
-                    Divider(modifier = Modifier.width(1.dp))
-                    if (sidebarVisible) {
-                        FloatingSidebar { sidebarVisible = false }
-                    } else {
                         IconButton(
-                            onClick = { sidebarVisible = true },
-                            modifier = Modifier.padding(16.dp)
-                                .background(
-                                    Color(0xFF6200EA),
-                                    RoundedCornerShape(50)
-                                )
+                            onClick = {
+                                sidebarVisible = true
+                            }
                         ) {
                             Icon(
-                                Icons.Outlined.Home,
-                                contentDescription = "Open Sidebar",
-                                tint = Color.White
+                                modifier = Modifier.size(35.dp).padding(horizontal = 6.dp),
+                                painter =
+                                painterResource(Res.drawable.ibm_cloud__vpc_file_storage),
+                                contentDescription = ""
                             )
                         }
                     }
 
-                    Box(Modifier.weight(1f)) {
+                    Divider(
+                        modifier = Modifier.width(.3.dp).fillMaxHeight()
+                    )
+
+                    if (sidebarVisible) {
+                        FloatingSidebar(tiles.map { it.name }) { sidebarVisible = false }
+                    }
+                    Divider(
+                        modifier = Modifier.width(.3.dp).fillMaxHeight()
+                    )
+
+                    Box(Modifier.weight(1f).scale(scale)) {
                         tiles.forEachIndexed { index, tile ->
                             DraggableResizableTile(tileState = tile, onMove = { dragAmount ->
                                 tiles = tiles.toMutableList().apply {
@@ -190,7 +260,7 @@ fun App() {
                         }
                     }
 
-                    Divider(modifier = Modifier.width(.5.dp).fillMaxHeight())
+                    Divider(modifier = Modifier.width(.3.dp).fillMaxHeight())
 
                     RightSidebar()
                 }
@@ -200,13 +270,13 @@ fun App() {
 }
 
 @Composable
-fun FloatingSidebar(onClose: () -> Unit) {
+fun FloatingSidebar(files: List<String>, onClose: () -> Unit) {
 
     Column(
         modifier = Modifier
             .fillMaxHeight()
             .width(150.dp)
-            .background(Color.White)
+            .background(Color(0xFFF5F7F8))
 //            .padding(16.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(10.dp)) {
@@ -218,11 +288,22 @@ fun FloatingSidebar(onClose: () -> Unit) {
             Icon(
                 Icons.Default.Close,
                 modifier = Modifier.clickable {
-                    onClose
+                    onClose()
                 },
                 contentDescription = "Close Sidebar"
             )
 
+        }
+        files.map {
+            Row(modifier = Modifier.padding(5.dp)) {
+                Icon(
+                    painter = painterResource(Res.drawable.document),
+                    modifier = Modifier.size(20.dp),
+                    contentDescription = ""
+                )
+                Text(text = it, style = MaterialTheme.typography.overline, modifier = Modifier.padding(horizontal =
+                5.dp))
+            }
         }
 
     }
@@ -231,6 +312,7 @@ fun FloatingSidebar(onClose: () -> Unit) {
 
 @Composable
 fun DotGrid(
+    scale : Float,
     cellSize: Dp = 40.dp,
     dotRadius: Dp = 2.dp,
     dotColor: Color = Color.LightGray
@@ -240,14 +322,14 @@ fun DotGrid(
     var offsetY by remember { mutableStateOf(0f) }
     Box(
         modifier = Modifier
-            .fillMaxSize()
+            .fillMaxSize().scale(scale)
             .pointerInput(Unit) {
                 detectTransformGestures { _, pan, zoom, _ ->
                     scale = (scale * zoom).coerceIn(0.5f, 3f)
                     offsetX += pan.x
                     offsetY += pan.y
                 }
-            }
+            }.background(Color.White)
     ) {
         Canvas(
             modifier = Modifier
@@ -282,18 +364,43 @@ fun DotGrid(
 @Composable
 fun RightSidebar() {
     Box(
-        Modifier.width(48.dp).fillMaxHeight().background(Color.White)
-//            .border(1.dp, Color.LightGray)
+        Modifier.width(48.dp).fillMaxHeight().background(Color(0xFFF5F7F8))
     ) {
         Column(
             Modifier.padding(vertical = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            IconButton(onClick = { /* TODO */ }) {
-                Icon(Icons.Default.Notifications, "Notifications")
+            IconButton(
+                onClick = {}
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        modifier = Modifier.size(35.dp)
+                            .padding(6.dp),
+                        painter = painterResource(Res.drawable.trash),
+                        contentDescription = "", tint = Color.Red
+                    )
+
+                }
             }
-            IconButton(onClick = { /* TODO */ }) {
-                Icon(Icons.Default.Settings, "Settings")
+
+            IconButton(
+                onClick = {}
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        modifier = Modifier.size(35.dp)
+                            .padding(6.dp),
+                        painter = painterResource(Res.drawable.idea),
+                        contentDescription = ""
+
+                    )
+
+                }
             }
         }
     }

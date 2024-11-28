@@ -1,6 +1,5 @@
 package com.jimjuma.filecanvas.tile
 
-
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.Image
@@ -36,6 +35,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
@@ -45,8 +45,16 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.jimjuma.filecanvas.TileState
+import com.jimjuma.filecanvas.extensions.openFile
+import filecanvas.composeapp.generated.resources.Res
+import filecanvas.composeapp.generated.resources.arrow_bottom_left
+import filecanvas.composeapp.generated.resources.arrow_bottom_right
+import filecanvas.composeapp.generated.resources.arrow_up_left
+import filecanvas.composeapp.generated.resources.arrow_up_right
+import filecanvas.composeapp.generated.resources.document
+import filecanvas.composeapp.generated.resources.subtract__alt
+import org.jetbrains.compose.resources.painterResource
 import kotlin.math.roundToInt
-
 
 @Composable
 fun DraggableResizableTile(
@@ -56,13 +64,13 @@ fun DraggableResizableTile(
 ) {
     val resizeState = remember { mutableStateOf(ResizeHandle.None) }
     val isSelected = remember { mutableStateOf(false) }
-    val handleSize = 20.dp
+    val handleSize = 25.dp
 
     val borderColor by animateColorAsState(
         targetValue = if (isSelected.value) MaterialTheme.colors.primary else Color.LightGray
     )
     val elevation by animateDpAsState(
-        targetValue = if (isSelected.value) 5.dp else 1.dp
+        targetValue = if (isSelected.value) 8.dp else 4.dp
     )
     val scrollState = rememberScrollState()
 
@@ -70,12 +78,19 @@ fun DraggableResizableTile(
         modifier = Modifier
             .offset { IntOffset(tileState.offset.x.roundToInt(), tileState.offset.y.roundToInt()) }
             .size(tileState.size.width.dp, tileState.size.height.dp)
+            .shadow(
+                elevation = elevation,
+                shape = RoundedCornerShape(12.dp),
+                clip = true
+            )
             .background(MaterialTheme.colors.surface, RoundedCornerShape(12.dp))
             .border(2.dp, borderColor, RoundedCornerShape(12.dp))
-//            .shadow(elevation, RoundedCornerShape(12.dp))
             .pointerInput(Unit) {
                 detectTapGestures(
                     onTap = { isSelected.value = !isSelected.value },
+                    onDoubleTap = {
+                        openFile(tileState.name)
+                    }
                 )
             }
             .pointerInput(Unit) {
@@ -97,10 +112,9 @@ fun DraggableResizableTile(
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
 
                 Icon(
-                    imageVector = Icons.Filled.Info,
-                    contentDescription = null,
-                    tint = MaterialTheme.colors.onSurface,
-                    modifier = Modifier.padding(4.dp)
+                    modifier = Modifier.size(32.dp).padding(vertical = 4.dp),
+                    painter = painterResource(Res.drawable.document),
+                    contentDescription = null
                 )
 
                 Text(
@@ -130,7 +144,6 @@ fun DraggableResizableTile(
             }
         }
 
-        // Resize handles
         if (isSelected.value) {
             ResizeHandles(
                 handleSize = handleSize,
@@ -139,7 +152,7 @@ fun DraggableResizableTile(
                 onMove = onMove,
                 onResize = { newSize ->
                     tileState.size = newSize
-                    onResize(newSize)
+//                    onResize(newSize)
                 }
             )
         }
@@ -186,18 +199,19 @@ fun ResizeHandle(
     cursor: String,
     onResize: (Offset) -> Unit
 ) {
-    val icon: ImageVector = when (handle) {
-        ResizeHandle.TopLeft -> Icons.Filled.ArrowBack
-        ResizeHandle.TopRight -> Icons.Filled.ArrowForward
-        ResizeHandle.BottomLeft -> Icons.Filled.KeyboardArrowUp
-        ResizeHandle.BottomRight -> Icons.Filled.KeyboardArrowDown
-        else -> Icons.Filled.ArrowForward
+    val icon: Painter = when (handle) {
+        ResizeHandle.TopLeft -> painterResource(Res.drawable.arrow_up_left)
+        ResizeHandle.TopRight -> painterResource(Res.drawable.arrow_up_right)
+        ResizeHandle.BottomLeft -> painterResource(Res.drawable.arrow_bottom_left)
+        ResizeHandle.BottomRight -> painterResource(Res.drawable.arrow_bottom_right)
+        else -> painterResource(Res.drawable.arrow_up_left)
     }
     Box(
         modifier = modifier
             .size(size)
-            .background(Color.Red, CircleShape)
-            .border(1.dp, MaterialTheme.colors.primary, CircleShape)
+            .padding(4.dp)
+//            .background(Color.Red, CircleShape)
+//            .border(1.dp, MaterialTheme.colors.primary, CircleShape)
             .pointerInput(handle) {
                 detectDragGestures(
                     onDragStart = { resizeState.value = handle },
@@ -214,7 +228,7 @@ fun ResizeHandle(
             }
     ){
         Icon(
-            imageVector = icon,
+            painter = icon,
             contentDescription = "Resize handle",
             modifier = Modifier.size(size),
             tint = MaterialTheme.colors.primary

@@ -9,6 +9,7 @@ import java.awt.Frame
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.rendering.PDFRenderer
 import org.jetbrains.skia.Image
+import java.awt.Desktop
 import java.awt.image.BufferedImage
 import java.io.File
 import java.nio.file.Files
@@ -62,4 +63,13 @@ actual class CommonFile internal constructor(private val file: File){
 
 actual fun createCommonFile(path: String): CommonFile {
     return CommonFile(File(path))
+}
+
+actual fun openFile(filePath: String) {
+    val file = File(filePath)
+    if (file.exists()) {
+        Desktop.getDesktop().open(file)
+    } else {
+        println("File does not exist: $filePath")
+    }
 }

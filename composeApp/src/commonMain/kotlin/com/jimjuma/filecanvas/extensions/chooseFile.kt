@@ -17,3 +17,5 @@ expect fun renderPdfPages(file: CommonFile): List<ImageBitmap> // Renders PDF pa
 expect fun loadImage(file: CommonFile): ImageBitmap
 
 expect fun createCommonFile(path: String): CommonFile
+
+expect fun openFile(filePath: String)

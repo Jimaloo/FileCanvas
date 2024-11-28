@@ -30,3 +30,6 @@ actual fun loadImage(file: CommonFile): ImageBitmap {
 actual fun createCommonFile(path: String): CommonFile {
     TODO("Not yet implemented")
 }
+
+actual fun openFile(filePath: String) {
+}
