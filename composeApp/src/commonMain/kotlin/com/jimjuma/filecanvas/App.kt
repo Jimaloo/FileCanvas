@@ -2,11 +2,8 @@ package com.jimjuma.filecanvas
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,48 +12,32 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.ClickableText
-import androidx.compose.material.Button
-import androidx.compose.material.Card
 import androidx.compose.material.Divider
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
-import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.OutlinedButton
-import androidx.compose.material.Surface
 import androidx.compose.material.Text
-import androidx.compose.material.TextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.drawscope.scale
-import androidx.compose.ui.graphics.drawscope.translate
-import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.jimjuma.filecanvas.extensions.CommonFile
 import com.jimjuma.filecanvas.extensions.chooseFile
-import com.jimjuma.filecanvas.extensions.extractTextFromPdf
+import com.jimjuma.filecanvas.extensions.loadImage
+import com.jimjuma.filecanvas.extensions.renderPdfPages
 import com.jimjuma.filecanvas.tile.DraggableResizableTile
 import kotlin.math.roundToInt
 
@@ -68,11 +49,15 @@ fun App() {
     var tiles by remember {
         mutableStateOf(
             mutableListOf<TileState>(
-                TileState(
-                    name = "File 1", offset = Offset(100f, 100f), size = Size(100f, 100f)
-                ), TileState(
-                    name = "File 2", offset = Offset(300f, 200f), size = Size(150f, 150f)
-                )
+//                TileState(
+//                    name = "File 1",
+//                    offset = Offset(100f, 100f),
+//                    size = Size(100f, 100f),
+//                ), TileState(
+//                    name = "File 2",
+//                    offset = Offset(300f, 200f),
+//                    size = Size(150f, 150f),
+//                )
             )
         )
     }
@@ -83,7 +68,9 @@ fun App() {
             Column(Modifier.fillMaxSize()) {
                 // Top Section
                 Row(
-                    modifier = Modifier.fillMaxWidth().background(Color.White).padding(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                        .background(Color.White)
+                        .padding(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text("Home")
@@ -105,28 +92,32 @@ fun App() {
                             when {
                                 file.extension().equals("pdf", ignoreCase = true) -> {
                                     selectedFile = file
-                                    pdfText = extractTextFromPdf(file) // Function to extract text from the PDF
                                     tiles = tiles.toMutableList().apply {
-                                        val pdfContents = "${selectedFile?.name}\n\n$pdfText"
-                                        add(
-                                            TileState(
-                                                name = pdfContents,
-                                                offset = Offset(300f, 700f),
-                                                size = Size(300f, 700f)
+                                        val pdfPages = renderPdfPages(file) // Platform-specific rendering
+//                                        pdfPages.forEachIndexed { index, page ->
+                                            add(
+                                                TileState(
+                                                    name = selectedFile?.name ?: "",
+                                                    offset = Offset(300f, 700f), // Offset each page slightly
+                                                    size = Size(300f, 400f),
+                                                    imageBitmaps = pdfPages
+                                                )
                                             )
-                                        )
+//                                        }
                                     }
                                 }
                                 file.extension().lowercase() in listOf("jpg", "jpeg", "png", "bmp", "gif") -> {
                                     selectedFile = file
-//                                    val imageBitmap = loadImage(file) // Function to load image into ImageBitmap
+
                                     tiles = tiles.toMutableList().apply {
+                                        val imageBitmap =
+                                            loadImage(file) // Platform-specific image loader
                                         add(
                                             TileState(
                                                 name = file.name,
                                                 offset = Offset(300f, 700f),
-                                                size = Size(300f, 700f),
-                                                imageBitmap = null
+                                                size = Size(300f, 400f),
+                                                imageBitmap = imageBitmap,
                                             )
                                         )
                                     }
@@ -335,40 +326,11 @@ fun DrawScope.drawGrid(gridSize: Dp, gridColor: Color) {
 }
 
 data class TileState(
-    val name: String, val offset: Offset, val size: Size, val imageBitmap: ImageBitmap? = null
+    var name: String,
+    var offset: Offset,
+    var size: Size,
+    var imageBitmap: ImageBitmap? = null,
+    var imageBitmaps: List<ImageBitmap>? = null
 )
-
-@Composable
-fun TileContainer() {
-    var tiles by remember {
-        mutableStateOf(
-            listOf(
-                TileState(
-                    name = "File 1", offset = Offset(100f, 100f), size = Size(100f, 100f)
-                ), TileState(
-                    name = "File 2", offset = Offset(300f, 200f), size = Size(150f, 150f)
-                )
-            )
-        )
-    }
-
-    Box(Modifier.fillMaxSize()) {
-        tiles.forEachIndexed { index, tile ->
-            DraggableResizableTile(tileState = tile, onMove = { dragAmount ->
-                tiles = tiles.toMutableList().apply {
-                    this[index] = this[index].copy(
-                        offset = this[index].offset + dragAmount
-                    )
-                }
-            }, onResize = { newSize ->
-                tiles = tiles.toMutableList().apply {
-                    this[index] = this[index].copy(
-                        size = newSize
-                    )
-                }
-            })
-        }
-    }
-}
 
 

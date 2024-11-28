@@ -3,23 +3,32 @@ package com.jimjuma.filecanvas.tile
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.ui.Alignment
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.Divider
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -27,6 +36,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.input.pointer.pointerInput
@@ -46,7 +56,7 @@ fun DraggableResizableTile(
 ) {
     val resizeState = remember { mutableStateOf(ResizeHandle.None) }
     val isSelected = remember { mutableStateOf(false) }
-    val handleSize = 12.dp
+    val handleSize = 20.dp
 
     val borderColor by animateColorAsState(
         targetValue = if (isSelected.value) MaterialTheme.colors.primary else Color.LightGray
@@ -64,9 +74,11 @@ fun DraggableResizableTile(
             .border(2.dp, borderColor, RoundedCornerShape(12.dp))
 //            .shadow(elevation, RoundedCornerShape(12.dp))
             .pointerInput(Unit) {
-//                detectTapGestures (
-//                    onTap = { isSelected.value = !isSelected.value },
-//                )
+                detectTapGestures(
+                    onTap = { isSelected.value = !isSelected.value },
+                )
+            }
+            .pointerInput(Unit) {
                 detectDragGestures(
                     onDragStart = { isSelected.value = true },
                     onDragEnd = { isSelected.value = false },
@@ -77,22 +89,44 @@ fun DraggableResizableTile(
                         onMove(dragAmount)
                     }
                 }
+
             }
     ) {
         // Content inside the tile
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
+
                 Icon(
-                    imageVector = Icons.Outlined.Settings,
+                    imageVector = Icons.Filled.Info,
                     contentDescription = null,
-                    tint = MaterialTheme.colors.onSurface
+                    tint = MaterialTheme.colors.onSurface,
+                    modifier = Modifier.padding(4.dp)
                 )
-                Spacer(Modifier.height(4.dp))
+
                 Text(
                     text = tileState.name,
-                    modifier = Modifier.verticalScroll(scrollState).padding(20.dp),
-                    style = MaterialTheme.typography.body2.copy(color = MaterialTheme.colors.onSurface)
+                    modifier = Modifier.verticalScroll(scrollState)
+                        .padding(start = 8.dp, end = 8.dp, bottom = 8.dp),
+                    style = MaterialTheme.typography.caption.copy(color = Color.Blue)
                 )
+                Divider()
+                tileState.imageBitmaps?.let {
+                    LazyColumn(modifier = Modifier.fillMaxSize()) {
+                        items(it.size) { index ->
+                            Image(
+                                bitmap = it[index],
+                                contentDescription = "PDF Page $index",
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
+                    }
+                }
+                tileState.imageBitmap?.let {
+                    Image(
+                        it,
+                        ""
+                    )
+                }
             }
         }
 
@@ -103,7 +137,10 @@ fun DraggableResizableTile(
                 resizeState = resizeState,
                 tileState = tileState,
                 onMove = onMove,
-                onResize = onResize
+                onResize = { newSize ->
+                    tileState.size = newSize
+                    onResize(newSize)
+                }
             )
         }
     }
@@ -126,18 +163,18 @@ private fun ResizeHandles(
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-    handles.forEach { (alignment, handle, cursor) ->
-        ResizeHandle(
-//            modifier = Modifier.align(alignment),
-            modifier = Modifier,
-            size = handleSize,
-            handle = handle,
-            resizeState = resizeState,
-            cursor = cursor
-        ) { dragAmount ->
-            handleResize(tileState, handle, dragAmount, onMove, onResize)
+        handles.forEach { (alignment, handle, cursor) ->
+            ResizeHandle(
+                modifier = Modifier.align(alignment),
+                size = handleSize,
+                handle = handle,
+                resizeState = resizeState,
+                cursor = cursor
+            ) { dragAmount ->
+                handleResize(tileState, handle, dragAmount, onMove, onResize)
+            }
         }
-    }}
+    }
 }
 
 @Composable
@@ -149,26 +186,40 @@ fun ResizeHandle(
     cursor: String,
     onResize: (Offset) -> Unit
 ) {
+    val icon: ImageVector = when (handle) {
+        ResizeHandle.TopLeft -> Icons.Filled.ArrowBack
+        ResizeHandle.TopRight -> Icons.Filled.ArrowForward
+        ResizeHandle.BottomLeft -> Icons.Filled.KeyboardArrowUp
+        ResizeHandle.BottomRight -> Icons.Filled.KeyboardArrowDown
+        else -> Icons.Filled.ArrowForward
+    }
     Box(
         modifier = modifier
             .size(size)
-            .background(MaterialTheme.colors.surface, CircleShape)
+            .background(Color.Red, CircleShape)
             .border(1.dp, MaterialTheme.colors.primary, CircleShape)
             .pointerInput(handle) {
-//                detectDragGestures(
-//                    onDragStart = { resizeState.value = handle },
-//                    onDragEnd = { resizeState.value = ResizeHandle.None },
-//                    onDragCancel = { resizeState.value = ResizeHandle.None }
-//                ) { change, dragAmount ->
-//                    change.consume()
-//                    onResize(dragAmount)
-//                }
-                detectDragGestures { change, dragAmount ->
+                detectDragGestures(
+                    onDragStart = { resizeState.value = handle },
+                    onDragEnd = { resizeState.value = ResizeHandle.None },
+                    onDragCancel = { resizeState.value = ResizeHandle.None }
+                ) { change, dragAmount ->
                     change.consume()
                     onResize(dragAmount)
                 }
+//                detectDragGestures { change, dragAmount ->
+//                    change.consume()
+//                    onResize(dragAmount)
+//                }
             }
-    )
+    ){
+        Icon(
+            imageVector = icon,
+            contentDescription = "Resize handle",
+            modifier = Modifier.size(size),
+            tint = MaterialTheme.colors.primary
+        )
+    }
 }
 
 fun handleResize(
@@ -178,7 +229,7 @@ fun handleResize(
     onMove: (Offset) -> Unit,
     onResize: (Size) -> Unit
 ) {
-    val minSize = 50f
+    val minSize = 200f
 
     when (handle) {
         ResizeHandle.TopLeft -> {
@@ -186,32 +237,40 @@ fun handleResize(
             val newHeight = tileState.size.height - dragAmount.y
             if (newWidth >= minSize && newHeight >= minSize) {
                 onMove(dragAmount)
+                tileState.size = Size(newWidth, newHeight)
                 onResize(Size(newWidth, newHeight))
             }
         }
+
         ResizeHandle.TopRight -> {
             val newWidth = tileState.size.width + dragAmount.x
             val newHeight = tileState.size.height - dragAmount.y
             if (newWidth >= minSize && newHeight >= minSize) {
                 onResize(Size(newWidth, newHeight))
+                tileState.size = Size(newWidth, newHeight)
                 onMove(Offset(0f, dragAmount.y))
             }
         }
+
         ResizeHandle.BottomLeft -> {
             val newWidth = tileState.size.width - dragAmount.x
             val newHeight = tileState.size.height + dragAmount.y
             if (newWidth >= minSize && newHeight >= minSize) {
                 onResize(Size(newWidth, newHeight))
+                tileState.size = Size(newWidth, newHeight)
                 onMove(Offset(dragAmount.x, 0f))
             }
         }
+
         ResizeHandle.BottomRight -> {
             val newWidth = tileState.size.width + dragAmount.x
             val newHeight = tileState.size.height + dragAmount.y
             if (newWidth >= minSize && newHeight >= minSize) {
                 onResize(Size(newWidth, newHeight))
+                tileState.size = Size(newWidth, newHeight)
             }
         }
+
         else -> Unit
     }
 }

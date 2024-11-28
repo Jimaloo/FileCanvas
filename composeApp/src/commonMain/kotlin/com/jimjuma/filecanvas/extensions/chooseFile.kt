@@ -12,4 +12,8 @@ expect class CommonFile {
     fun extension(): String
 }
 
+expect fun renderPdfPages(file: CommonFile): List<ImageBitmap> // Renders PDF pages into images
 
+expect fun loadImage(file: CommonFile): ImageBitmap
+
+expect fun createCommonFile(path: String): CommonFile

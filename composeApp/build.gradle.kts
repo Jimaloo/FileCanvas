@@ -56,6 +56,7 @@ kotlin {
         val desktopMain by getting{
             dependencies {
                 implementation("org.apache.pdfbox:pdfbox:2.0.24")
+                implementation("org.jetbrains.skiko:skiko:0.8.0")
             }
         }
 
