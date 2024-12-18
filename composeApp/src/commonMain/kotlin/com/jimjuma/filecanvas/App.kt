@@ -39,6 +39,7 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.jimjuma.filecanvas.composables.LinkPreviewCard
 import com.jimjuma.filecanvas.extensions.CommonFile
 import com.jimjuma.filecanvas.extensions.chooseFile
 import com.jimjuma.filecanvas.extensions.loadImage
@@ -177,7 +178,7 @@ fun App() {
 
 
                     Row(
-                        modifier = Modifier.padding(horizontal = 6.dp).clickable{
+                        modifier = Modifier.padding(horizontal = 6.dp).clickable {
                             scale += .1f
                         },
                         verticalAlignment = Alignment.CenterVertically
@@ -191,9 +192,13 @@ fun App() {
                     }
 
 
+                    Text(
+                        text = "${scale.toInt() * 100}",
+                        modifier = Modifier.padding(horizontal = 6.dp)
+                    )
 
                     Row(
-                        modifier = Modifier.padding(horizontal = 6.dp).clickable{
+                        modifier = Modifier.padding(horizontal = 6.dp).clickable {
                             scale -= .1f
                         },
                         verticalAlignment = Alignment.CenterVertically
@@ -243,6 +248,7 @@ fun App() {
                     )
 
                     Box(Modifier.weight(1f).scale(scale)) {
+                        LinkPreviewCard("https://www.nytimes.com/2024/12/18/health/ozempic-food-rfk-elon-musk.html")
                         tiles.forEachIndexed { index, tile ->
                             DraggableResizableTile(tileState = tile, onMove = { dragAmount ->
                                 tiles = tiles.toMutableList().apply {
@@ -301,8 +307,14 @@ fun FloatingSidebar(files: List<String>, onClose: () -> Unit) {
                     modifier = Modifier.size(20.dp),
                     contentDescription = ""
                 )
-                Text(text = it, style = MaterialTheme.typography.overline, modifier = Modifier.padding(horizontal =
-                5.dp))
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.overline,
+                    modifier = Modifier.padding(
+                        horizontal =
+                        5.dp
+                    )
+                )
             }
         }
 
@@ -312,9 +324,9 @@ fun FloatingSidebar(files: List<String>, onClose: () -> Unit) {
 
 @Composable
 fun DotGrid(
-    scale : Float,
+    scale: Float,
     cellSize: Dp = 40.dp,
-    dotRadius: Dp = 2.dp,
+    dotRadius: Dp = 1.dp,
     dotColor: Color = Color.LightGray
 ) {
     var scale by remember { mutableStateOf(1f) }

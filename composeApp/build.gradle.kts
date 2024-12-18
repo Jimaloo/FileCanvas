@@ -55,8 +55,16 @@ kotlin {
     sourceSets {
         val desktopMain by getting{
             dependencies {
+                implementation(compose.desktop.currentOs)
+                implementation(libs.kotlinx.coroutines.swing)
                 implementation("org.apache.pdfbox:pdfbox:2.0.24")
                 implementation("org.jetbrains.skiko:skiko:0.8.0")
+                implementation("org.jsoup:jsoup:1.16.1")
+                implementation("org.jetbrains.compose.ui:ui:1.5.0")
+                implementation("io.ktor:ktor-client-cio:2.3.4") // JVM-specific engine
+                implementation("io.ktor:ktor-client-core:2.3.3")
+                implementation("io.ktor:ktor-client-content-negotiation:2.3.3")
+                implementation("io.ktor:ktor-serialization-gson:2.3.3")
             }
         }
 
@@ -64,6 +72,12 @@ kotlin {
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
+        }
+        val wasmJsMain by getting {
+            dependencies {
+                // Ktor might not fully support Wasm yet; use alternative if needed.
+                // If no HTTP is needed, exclude Ktor here.
+            }
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -75,12 +89,10 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime.compose)
             implementation(projects.shared)
+            implementation("media.kamel:kamel-image-default:1.0.0")
+
         }
-        desktopMain.dependencies {
-            implementation(compose.desktop.currentOs)
-            implementation(libs.kotlinx.coroutines.swing)
-            implementation("org.apache.pdfbox:pdfbox:2.0.24")
-        }
+
     }
 }
 
@@ -112,6 +124,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.ui.desktop)
     debugImplementation(compose.uiTooling)
 }
 
